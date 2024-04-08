@@ -32,8 +32,19 @@
 from . import angle
 from . import const
 
+# Defines the maximum orbs for each aspect type
+MAX_ORBS = {
+    const.CONJUNCTION: 8,
+    const.SEXTILE: 5,
+    const.SQUARE: 8,
+    const.TRINE: 5,
+    const.OPPOSITION: 8,
+    const.QUINCUNX: 4,
+    const.SEMISEXTILE: 4,
+}
+
 # Orb for minor and exact aspects
-MAX_MINOR_ASP_ORB = 3
+MAX_MINOR_ASP_ORB = 5 # serves as a fallback, when an aspect is not mentioned in 'MAX_ORBS'
 MAX_EXACT_ORB = 0.3
 
 
@@ -62,46 +73,29 @@ def _aspectDict(obj1, obj2, aspList):
     aspects.
     
     This function makes the following assumptions:
-    - Syzygy does not start aspects but receives 
-      any aspect.
-    - Pars Fortuna and Moon Nodes only starts 
-      conjunctions but receive any aspect.
-    - All other objects can start and receive
-      any aspect.
-      
-    Note: this function returns the aspect
-    even if it is not within the orb of obj1
-    (but is within the orb of obj2).
+    - All objects can start and receive any aspect.
+    - Aspects are considered valid if the angular separation between
+      obj1 and obj2 is within the maximum allowed orb for the aspect type.
+    
+    Note: Aspects between the North Node and South Node are ignored as
+    they are always in opposition.
     
     """
-    # Ignore aspects from same and Syzygy
-    if obj1 == obj2 or obj1.id == const.SYZYGY:
+    # Ignore aspects from the same object or between North Node and South Node
+    if obj1 == obj2 or (obj1.id in [const.NORTH_NODE, const.SOUTH_NODE] and obj2.id in [const.NORTH_NODE, const.SOUTH_NODE]):
         return None
-
+    
     orbs = _orbList(obj1, obj2, aspList)
     for aspDict in orbs:
         asp = aspDict['type']
         orb = aspDict['orb']
+        
+        # Get the maximum allowed orb for the aspect type
+        max_orb = MAX_ORBS.get(asp, MAX_MINOR_ASP_ORB)  # Fallback to MAX_MINOR_ASP_ORB for undefined aspects
 
-        # Check if aspect is within orb
-        if asp in const.MAJOR_ASPECTS:
-            # Ignore major aspects out of orb
-            if obj1.orb() < orb and obj2.orb() < orb:
-                continue
-        else:
-            # Ignore minor aspects out of max orb
-            if MAX_MINOR_ASP_ORB < orb:
-                continue
-
-        # Only conjunctions for Pars Fortuna and Nodes
-        if obj1.id in [const.PARS_FORTUNA,
-                       const.NORTH_NODE,
-                       const.SOUTH_NODE] and \
-                asp != const.CONJUNCTION:
-            continue
-
-        # We have a valid aspect within orb
-        return aspDict
+        # Check if aspect is within the maximum allowed orb
+        if orb <= max_orb:
+            return aspDict
 
     return None
 
@@ -157,7 +151,7 @@ def _aspectProperties(obj1, obj2, aspDict):
     else:
         prop['condition'] = const.DISSOCIATE
 
-        # Movement of the individual objects
+    # Movement of the individual objects
     if abs(orbDir) < MAX_EXACT_ORB:
         prop1['movement'] = prop2['movement'] = const.EXACT
     else:
