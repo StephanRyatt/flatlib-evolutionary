@@ -177,8 +177,8 @@ class Object(GenericObject):
 class House(GenericObject):
     """ This class represents a generic house cusp. """
 
-    # The traditional house offset
-    _OFFSET = -5.0
+    # The house offset
+    _OFFSET = -1.0
 
     def __init__(self):
         super().__init__()
