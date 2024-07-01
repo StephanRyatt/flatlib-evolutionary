@@ -35,9 +35,9 @@ from . import const
 # Defines the maximum orbs for each aspect type
 MAX_ORBS = {
     const.CONJUNCTION: 8,
-    const.SEXTILE: 5,
+    const.SEXTILE: 6,
     const.SQUARE: 8,
-    const.TRINE: 5,
+    const.TRINE: 6,
     const.OPPOSITION: 8,
     const.QUINCUNX: 4,
     const.SEMISEXTILE: 4,
